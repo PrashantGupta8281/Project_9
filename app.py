@@ -24,6 +24,7 @@ st.set_page_config(
 )
 
 # --- CAPTIVATING NEON DARK THEME (CUSTOM CSS) ---
+# --- CAPTIVATING NEON DARK THEME (CUSTOM CSS) ---
 st.markdown("""
     <style>
     /* Main Background & Text Color */
@@ -31,7 +32,7 @@ st.markdown("""
         background: linear-gradient(135deg, #0d0e15 0%, #1a1c29 100%);
         color: #f0f2f6;
     }
-
+    
     /* Header styling with a vivid gradient */
     .main-title {
         font-size: 3rem !important;
@@ -43,7 +44,7 @@ st.markdown("""
         margin-bottom: 0.5rem;
         letter-spacing: -1px;
     }
-
+    
     .subtitle {
         text-align: center;
         color: #94a3b8;
@@ -55,7 +56,7 @@ st.markdown("""
     div[data-testid="stFileUploadDropzone"], .stMarkdown div div {
         border-radius: 16px;
     }
-
+    
     /* Custom Card Style for Results */
     .prediction-card {
         background: rgba(255, 255, 255, 0.03);
@@ -66,7 +67,7 @@ st.markdown("""
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         margin-top: 2rem;
     }
-
+    
     /* Glowing Button Styling */
     .stButton>button {
         width: 100%;
@@ -79,7 +80,7 @@ st.markdown("""
         transition: all 0.3s ease !important;
         box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4);
     }
-
+    
     .stButton>button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 20px rgba(0, 242, 254, 0.6);
@@ -91,8 +92,7 @@ st.markdown("""
         background-color: #00f2fe !important;
     }
     </style>
-""", unsafe_gradient=True)
-
+""", unsafe_allow_html=True) # <-- Swapped here
 # --- MODEL DOWNLOAD & CACHING ---
 MODEL_URL = "https://huggingface.co/Prassh/my_model.keras/resolve/main/my_model.keras"
 MODEL_PATH = "my_model.keras"
