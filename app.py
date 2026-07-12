@@ -207,10 +207,38 @@ if model is not None:
             st.markdown("<div style='padding-top:25px;'></div>", unsafe_allow_html=True)
             if st.button("Analyze Target Matrix"):
                 with st.spinner("Decoding tensor mappings..."):
-                    # Preprocessing calculations
-                    img_resized = image.resize((224, 224))
-                    img_array = np.array(img_resized) / 255.0
-                    input_tensor = np.expand_dims(img_array, axis=0)
+                   # --- AFTER (FIXED VERSION) ---
+# 1. Automatically extract the exact shape your model expects
+# Most Keras models have input_shape like (None, Height, Width, Channels)
+try:
+    model_input_shape = model.input_shape
+    # Extract height and width from the shape matrix
+    target_height = model_input_shape[1] if model_input_shape[1] is not None else 224
+    target_width = model_input_shape[2] if model_input_shape[2] is not None else 224
+    target_channels = model_input_shape[3] if len(model_input_shape) > 3 else 3
+except Exception:
+    # Fallback if shape inspection fails
+    target_height, target_width, target_channels = 224, 224, 3
+
+# 2. Resize the image dynamically to match your exact model requirements
+img_resized = image.resize((target_width, target_height))
+
+# 3. Convert to grayscale if your model only expects 1 channel (Black & White)
+if target_channels == 1:
+    img_resized = img_resized.convert("L")
+
+img_array = np.array(img_resized)
+
+# 4. Handle normalization scaling
+# (If your data array isn't scaled between 0-1, you can remove the "/ 255.0")
+if img_array.max() > 1.0:
+    img_array = img_array / 255.0
+
+# 5. Reshape to match standard batch format
+if target_channels == 1:
+    img_array = np.expand_dims(img_array, axis=-1) # Add channel index if grayscale
+
+input_tensor = np.expand_dims(img_array, axis=0)
                     
                     # Core inference pass
                     predictions = model.predict(input_tensor)
