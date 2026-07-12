@@ -180,28 +180,39 @@ def load_hf_model():
         return None
 
 def preprocess_image(image, model):
-    """Dynamically reads expected model dimensions and adjusts input dimensions safely."""
+    """Dynamically reads expected model dimensions, converts RGBA to RGB, and extracts features safely."""
     try:
-        model_input_shape = model.input_shape
+        # Robustly inspect input shape structural depth
+        if isinstance(model.input_shape, list):
+            model_input_shape = model.input_shape[0]
+        else:
+            model_input_shape = model.input_shape
+
         target_height = model_input_shape[1] if model_input_shape[1] is not None else 224
         target_width = model_input_shape[2] if model_input_shape[2] is not None else 224
         target_channels = model_input_shape[3] if len(model_input_shape) > 3 else 3
     except Exception:
         target_height, target_width, target_channels = 224, 224, 3
 
+    # Force clean color conversion to discard potential alpha transparency layers
+    if target_channels == 3:
+        image = image.convert("RGB")
+    elif target_channels == 1:
+        image = image.convert("L")
+
     # Shape transformation processing
     img_resized = image.resize((target_width, target_height))
-    
-    if target_channels == 1:
-        img_resized = img_resized.convert("L")
-        
     img_array = np.array(img_resized)
     
+    # Handle normal scaling transformations
     if img_array.max() > 1.0:
         img_array = img_array / 255.0
         
-    if target_channels == 1:
+    # Enforce standard dimension rank expansion configuration
+    if target_channels == 1 and len(img_array.shape) == 2:
         img_array = np.expand_dims(img_array, axis=-1)
+    elif target_channels == 3 and len(img_array.shape) == 4:
+        img_array = img_array[:, :, :3]
         
     return np.expand_dims(img_array, axis=0)
 
@@ -232,7 +243,7 @@ if model is not None:
             st.markdown("<div style='padding-top:25px;'></div>", unsafe_allow_html=True)
             if st.button("Analyze Target Matrix"):
                 with st.spinner("Decoding tensor mappings..."):
-                    # Process matrix dimensions smoothly using the functional tracker
+                    # Process matrix dimensions smoothly using the robust tracking utility
                     input_tensor = preprocess_image(image, model)
                     
                     # Core inference pass
