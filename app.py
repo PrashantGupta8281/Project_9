@@ -78,37 +78,21 @@ st.markdown("""
         box-shadow: 0 8px 25px rgba(0, 242, 254, 0.5);
         color: #ffffff !important;
     }
-
-    /* Custom color tracking for standard warning/success text wrappers */
-    .stAlert {
-        background: rgba(255, 255, 255, 0.04) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1) !important;
-        border-radius: 12px !important;
-    }
     </style>
 """, unsafe_allow_html=True)
 
-# --- MODEL DOWNLOAD & SECURE AUTHENTICATION ---
-# Pointing to your new identifier_model repository
+# --- MODEL DOWNLOAD ---
 MODEL_URL = "https://huggingface.co/Prassh/identifier_model/resolve/main/my_model.keras"
 MODEL_PATH = "my_model.keras"
 
 @st.cache_resource
 def load_hf_model():
-    """Downloads the Keras model securely from the updated HF path using secrets authorization."""
+    """Downloads the Keras model directly from the public Hugging Face URL."""
     if not os.path.exists(MODEL_PATH):
-        with st.spinner("⚡ Connecting to secure Hugging Face Hub registry..."):
+        with st.spinner("⚡ Fetching your public model from Hugging Face Hub..."):
             try:
-                headers = {}
-                # Extracting token from your environment configuration
-                if "HF_TOKEN" in st.secrets:
-                    headers["Authorization"] = f"Bearer {st.secrets['HF_TOKEN']}"
-                else:
-                    st.error("Missing token string. Please define HF_TOKEN within your secrets context.")
-                    return None
-                
-                # Fetching binary data stream
-                response = requests.get(MODEL_URL, headers=headers, stream=True)
+                # No token or authentication headers needed since repo is public
+                response = requests.get(MODEL_URL, stream=True)
                 response.raise_for_status()
                 
                 with open(MODEL_PATH, "wb") as f:
@@ -125,7 +109,7 @@ def load_hf_model():
         st.error(f"Error parsing Keras file architecture: {e}")
         return None
 
-# Trigger cached model compile step
+# Compile step
 model = load_hf_model()
 
 # --- STUNNING PRESENTATION LAYER ---
@@ -133,7 +117,6 @@ st.markdown('<h1 class="main-title">AI Identifier Studio</h1>', unsafe_allow_htm
 st.markdown('<p class="subtitle">High-fidelity classification engine via Prassh/identifier_model</p>', unsafe_allow_html=True)
 
 if model is not None:
-    # Asset Input Zone
     uploaded_file = st.file_uploader("Upload an target image for identification analysis", type=["jpg", "jpeg", "png"])
     
     if uploaded_file is not None:
@@ -142,15 +125,12 @@ if model is not None:
         
         if st.button("Execute Identification Pass"):
             with st.spinner("Analyzing neural features..."):
-                # Basic dimension shaping (Swap 224, 224 out if your model tracks a different input size)
                 img_resized = image.resize((224, 224)) 
                 img_array = np.array(img_resized) / 255.0
                 input_tensor = np.expand_dims(img_array, axis=0)
                 
-                # Run evaluation matrix
                 predictions = model.predict(input_tensor)
                 
-            # Render Glowing Information Result Matrix
             st.markdown(f"""
                 <div class="prediction-card">
                     <h3 style="color: #00f2fe; margin-top: 0; font-weight:700;">Evaluation Complete</h3>
@@ -160,5 +140,3 @@ if model is not None:
                     </code>
                 </div>
             """, unsafe_allow_html=True)
-else:
-    st.info("Awaiting structural backend sync. Ensure HF_TOKEN is specified within your settings deployment configuration.")
